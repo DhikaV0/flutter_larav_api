@@ -11,10 +11,8 @@ class PostsPage extends StatefulWidget {
 
 class _PostsPageState extends State<PostsPage> {
   final HttpService httpService = HttpService();
-  TextEditingController searchController = TextEditingController();
 
   List<Produk> allProduk = [];
-  List<Produk> filteredProduk = [];
 
   @override
   void initState() {
@@ -27,54 +25,25 @@ class _PostsPageState extends State<PostsPage> {
       final produkList = await httpService.getPosts();
       setState(() {
         allProduk = produkList;
-        filteredProduk = produkList;
       });
     } catch (e) {
       print("Error fetching data: $e");
     }
   }
 
- void filterProduk(String query) {
-  setState(() {
-    filteredProduk = allProduk
-        .where((produk) => (produk.description ?? '').toLowerCase().contains(query.toLowerCase()))
-        .toList();
-  });
-}
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("List Produk")),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: searchController,
-              decoration: InputDecoration(
-                hintText: "Cari Produk",
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              onChanged: filterProduk,
+      body: allProduk.isEmpty
+          ? const Center(child: Text("Tidak ada hasil ditemukan"))
+          : ListView.builder(
+              itemCount: allProduk.length,
+              itemBuilder: (context, index) {
+                final produk = allProduk[index];
+                return ProdukCard(produk: produk);
+              },
             ),
-          ),
-          Expanded(
-            child: filteredProduk.isEmpty
-                ? const Center(child: Text("Tidak ada hasil ditemukan"))
-                : ListView.builder(
-                    itemCount: filteredProduk.length,
-                    itemBuilder: (context, index) {
-                      final produk = filteredProduk[index];
-                      return ProdukCard(produk: produk);
-                    },
-                  ),
-          ),
-        ],
-      ),
     );
   }
 }
